@@ -3,3 +3,5 @@
 **node_modules
 *.json
 *.qemu*
+__pycache__/
+*.pyc

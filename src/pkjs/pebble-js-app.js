@@ -51,6 +51,11 @@ Pebble.addEventListener('webviewclosed', function(e) {
     dict.weather = false;
   }
 
+  // Convert location string to an integer hash for the watch side
+  if (dict[messageKeys.cityid] && dict[messageKeys.cityid] !== '0') {
+    dict[messageKeys.cityid] = hashString(dict[messageKeys.cityid]);
+  }
+
   // Remove phone only settings
   delete dict[messageKeys.apiKey];
   delete dict[messageKeys.apiKeyOk];
@@ -103,6 +108,22 @@ Pebble.addEventListener('ready', function() {
     ', using for Weather: ' + lang);
   sendMessageToPebble({'JS_READY': 1});
 });
+
+/**
+ * Simple 32-bit hash function to convert location string to an integer
+ * @param {string} str string to hash
+ * @return {number} hashed integer
+ */
+function hashString(str) {
+  let hash = 0;
+  if (str.length === 0) return hash;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash |= 0; // Convert to 32bit integer
+  }
+  return hash;
+}
 
 /**
  * Send a payload to the watch
@@ -161,10 +182,10 @@ Pebble.addEventListener('appmessage', function(e) {
  */
 function updateWeather() {
   console.log('Updating weather');
-  cityId = JSON.parse(localStorage.getItem('clay-settings')).cityid;
-  console.log('City ID is ' + cityId);
-  if (cityId !== '0') {
-    fetchWeather({'cityId': cityId});
+  locationStr = JSON.parse(localStorage.getItem('clay-settings')).cityid;
+  console.log('Location is ' + locationStr);
+  if (locationStr !== '0') {
+    fetchWeather({'location': locationStr});
   } else {
     navigator.geolocation.getCurrentPosition(
         locationSuccess, locationError, locationOptions);
@@ -173,16 +194,16 @@ function updateWeather() {
 
 /**
  * Fetch weather from OpenWeatherMap and push it to the watch
- * @param {Object} args arguments dict, either containing a cityId,
+ * @param {Object} args arguments dict, either containing a location name,
  *                      or lat lon pair
  */
 function fetchWeather(args) {
   apiKey = JSON.parse(localStorage.getItem('clay-settings')).apiKey;
   const req = new XMLHttpRequest();
-  let url = 'http://api.openweathermap.org/data/2.5/weather?';
-  if ('cityId' in args) {
-    console.log('Fetching weather for city ID ' + args.cityId);
-    url += 'id='+ args.cityId;
+  let url = 'https://api.openweathermap.org/data/2.5/weather?';
+  if ('location' in args) {
+    console.log('Fetching weather for location ' + args.location);
+    url += 'q='+ encodeURIComponent(args.location);
   } else if (('lat' in args) && ('lon' in args)) {
     console.log(
         'Fetching weather for lat: ' + args.lat + ' lon: ' + args.lon);
@@ -192,7 +213,7 @@ function fetchWeather(args) {
     console.log(JSON.stringify(args, null, 4));
     return;
   }
-  url += '&units=metric&lang=' + lang + '&type=accurate';
+  url += '&units=metric&lang=' + lang;
   url += '&appid=' + apiKey;
   console.log('UpdateURL: ' + url);
   req.open('GET', url, true);

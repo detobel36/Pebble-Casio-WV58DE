@@ -3,11 +3,13 @@ Pebble-Casio-WV58DE
 
 Pebble 2.0 Watchface of my previous watch.
 
-![Screenshot](https://github.com/PanicMan/Pebble-Casio-WV58DE/raw/master/add/Casio_WV-58DE.png "Screenshot")<br>
+![Screenshot](https://github.com/detobel36/Pebble-Casio-WV58DE/releases/latest/download/screenshot.png "Screenshot")<br>
 You can download it in the Pebble Store:
 <a href="http://pblweb.com/appstore/52f0ad814ae3634df7000259" title="Casio-WV-58DE on the Pebble appstore">
   <img src="http://pblweb.com/badge/52f0ad814ae3634df7000259/white/medium/" />
 </a>
+Or the last release here:
+[https://github.com/detobel36/Pebble-Casio-WV58DE/releases/latest/download/Pebble-Casio-WV58DE.pbw]
 
 
 Update History

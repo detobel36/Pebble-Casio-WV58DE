@@ -194,7 +194,7 @@ static void background_layer_update_callback(Layer *layer, GContext *ctx) {
       char sTemp[] = "-999";
       snprintf(sTemp, sizeof(sTemp), "%d",
                (int16_t)((double)CfgData.w_temp * (CfgData.isunit ? 1.8 : 1) +
-                         (CfgData.isunit ? 32 : 0))); //Â°C or Â°F?
+                         (CfgData.isunit ? 32 : 0))); // Â°C or Â°F?
       graphics_draw_text(ctx, sTemp, digitS,
                          GRect(20, 40 - (CfgData.cond ? 2 : 0), 50, 32),
                          GTextOverflowModeFill, GTextAlignmentRight, NULL);

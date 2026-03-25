@@ -2,16 +2,28 @@ name: Build
 
 on: push
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+    outputs:
+      artifact_name: ${{ steps.generate_name.outputs.artifact_name }}
+      version: ${{ steps.get_version.outputs.version }}
     env:
-      SDK_VER: 4.3
-      SDK_BUNDLE_NAME: pebble-sdk-4.5-linux64
+      PEBBLE_SKIP_ANALYTICS: 1
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: true
+
+      - name: Get version
+        id: get_version
+        run: |
+          VERSION=$(jq -r '.version' package.json)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Cache date
         run: echo "DATE=$(date +'%Y-%m-%d %H:%M:%S')" >> $GITHUB_ENV
@@ -26,50 +38,39 @@ jobs:
         run: echo "BUILD_COMMIT=$(git rev-parse --short $GITHUB_SHA)" >> $GITHUB_ENV
 
       - name: Generate output name
-        run: echo "NAME=${BUILD_DATE}_${BUILD_BRANCH}_${BUILD_COMMIT}_Pebble-Casio-WV58DE" >> $GITHUB_ENV
+        id: generate_name
+        run: |
+          NAME="${BUILD_DATE}_${BUILD_BRANCH}_${BUILD_COMMIT}_Pebble-Casio-WV58DE"
+          echo "NAME=$NAME" >> $GITHUB_ENV
+          echo "artifact_name=$NAME" >> $GITHUB_OUTPUT
+
+      - name: Setup Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
 
       - name: Install dependencies
         run: |
           sudo apt update
-          sudo apt install python2
-          sudo update-alternatives --install /usr/bin/python python /usr/bin/python2.7 1
-          curl https://bootstrap.pypa.io/pip/2.7/get-pip.py --output get-pip.py
-          sudo python2 get-pip.py
-          sudo -H python2.7 -m pip install -U pip setuptools wheel virtualenv
-          sudo apt install python2-dev
-          sudo apt install libnode-dev npm
+          sudo apt install -y libnode-dev npm
           sudo apt install -y libsdl1.2debian libfdt1 libpixman-1-0
           sudo apt install -y xvfb
-          rm get-pip.py
-
-      - name: Bootstrap Pebble SDK
-        run: |
-          mkdir ~/pebble-dev
-          cd ~/pebble-dev
-          wget https://developer.rebble.io/s3.amazonaws.com/assets.getpebble.com/pebble-tool/${SDK_BUNDLE_NAME}.tar.bz2
-          tar -xf ${SDK_BUNDLE_NAME}.tar.bz2
-          cd ${SDK_BUNDLE_NAME}
-          echo "$HOME/pebble-dev/${SDK_BUNDLE_NAME}/bin" >> $GITHUB_PATH
-          if [ "$(grep 'pebble-sdk-homebrew' requirements.txt)" ]; then cp requirements.txt requirements.txt.OLD; grep -v pypkjs requirements.txt.OLD > requirements.txt; echo 'git+https://github.com/pebble/pypkjs.git' >> requirements.txt; fi
-          if [ "$(grep 'sdk.getpebble.com' pebble-tool/pebble_tool/sdk/manager.py)" ]; then sudo mv pebble-tool pebble-tool.OLD; sudo git clone https://github.com/pebble-dev/pebble-tool.git; fi
-          [ -e .env ] || virtualenv --python=python2.7 .env
-          . .env/bin/activate
-          pip install -r requirements.txt
-          pip install -r pebble-tool/requirements.txt
-          deactivate
+          python3 -m pip install pebble-tool
 
       - name: Install Pebble SDK
-        run: yes | pebble sdk install $SDK_VER
+        run: pebble sdk install latest
 
       - name: Build app
-        run: pebble build --sdk $SDK_VER
+        run: pebble build
 
       - name: Generate screenshots (release only)
         if: startsWith(github.ref, 'refs/tags/')
-        run: ./scripts/gen_screenshots.sh
+        run: |
+          ./scripts/gen_screenshots.sh
+          cp build/basalt.png build/screenshot.png
 
       - name: Upload app
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ env.NAME }}
           path: |
@@ -84,18 +85,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download files
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.build.outputs.artifact_name }}
 
-      - name: Zip each folder
+      - name: Create zip
         run: |
-          for d in */; do
-            echo "Zipping ${d} into ${d%/}.zip"
-            zip -r "${d%/}.zip" "$d"
-            echo "Deleting ${d}"
-            rm -rf "$d"
-          done
+          FOLDER_NAME="Pebble-Casio-WV58DE-${{ needs.build.outputs.version }}"
+          mkdir -p "$FOLDER_NAME"
+          cp *.pbw *.png "$FOLDER_NAME/"
+          zip -r release.zip "$FOLDER_NAME/"
+
       - name: Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           files: |
-            *
+            *.pbw
+            screenshot.png
+            release.zip
