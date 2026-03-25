@@ -142,8 +142,8 @@ module.exports = [
       {
         'type': 'input',
         'messageKey': 'cityid',
-        'label': 'OpenWeatherMap City ID',
-        'description': 'Use 0 for auto location',
+        'label': 'Location',
+        'description': 'Enter City Name (e.g. London, GB). Use 0 for auto location',
         'defaultValue': '0',
         'group': 'weather',
       },
