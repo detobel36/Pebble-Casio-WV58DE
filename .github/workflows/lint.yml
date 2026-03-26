@@ -33,6 +33,8 @@ jobs:
       - name: Run linters
         uses: wearerequired/lint-action@v2.3.0
         with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          auto_fix: true
           eslint: true
 
   lint-c:
@@ -46,4 +48,6 @@ jobs:
       - name: Run linters
         uses: wearerequired/lint-action@v2.3.0
         with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          auto_fix: true
           clang_format: true
