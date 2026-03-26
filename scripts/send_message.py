@@ -1,4 +1,6 @@
 import base64
+import sys
+import time
 from uuid import UUID
 import json
 import argparse
@@ -51,6 +53,8 @@ def main(args):
             b = base64.b64decode(t['value'])
             tuples[k]=ByteArray(b)
     app_message.send_message(UUID(msg['uuid']),tuples)
+    time.sleep(1)
+    sys.exit(0)
 
 
 if __name__ == "__main__":
