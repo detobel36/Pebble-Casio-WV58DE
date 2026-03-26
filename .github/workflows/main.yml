@@ -8,6 +8,7 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-20.04
+    timeout-minutes: 20
     outputs:
       artifact_name: ${{ steps.generate_name.outputs.artifact_name }}
     env:
