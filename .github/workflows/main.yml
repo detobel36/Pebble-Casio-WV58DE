@@ -2,14 +2,19 @@ name: Build
 
 on: push
 
+permissions:
+  contents: write
+
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
+    outputs:
+      artifact_name: ${{ steps.generate_name.outputs.artifact_name }}
     env:
       SDK_VER: 4.3
       SDK_BUNDLE_NAME: pebble-sdk-4.5-linux64
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: true
 
@@ -26,7 +31,11 @@ jobs:
         run: echo "BUILD_COMMIT=$(git rev-parse --short $GITHUB_SHA)" >> $GITHUB_ENV
 
       - name: Generate output name
-        run: echo "NAME=${BUILD_DATE}_${BUILD_BRANCH}_${BUILD_COMMIT}_Pebble-Casio-WV58DE" >> $GITHUB_ENV
+        id: generate_name
+        run: |
+          NAME="${BUILD_DATE}_${BUILD_BRANCH}_${BUILD_COMMIT}_Pebble-Casio-WV58DE"
+          echo "NAME=$NAME" >> $GITHUB_ENV
+          echo "artifact_name=$NAME" >> $GITHUB_OUTPUT
 
       - name: Install dependencies
         run: |
@@ -69,7 +78,7 @@ jobs:
         run: ./scripts/gen_screenshots.sh
 
       - name: Upload app
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ env.NAME }}
           path: |
@@ -84,7 +93,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download files
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.build.outputs.artifact_name }}
 
       - name: Zip each folder
         run: |
@@ -95,7 +106,7 @@ jobs:
             rm -rf "$d"
           done
       - name: Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           files: |
             *

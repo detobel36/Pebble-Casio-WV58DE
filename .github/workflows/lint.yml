@@ -14,18 +14,22 @@ jobs:
   check-eol:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Check line endings
-        uses: erclu/check-crlf@v1.2.0
+        run: |
+          if grep -rIl $'\r' . --exclude-dir=.git --exclude-dir=node_modules; then
+            echo "CRLF line endings found"
+            exit 1
+          fi
 
   lint-js:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Set up Node.js
-        uses: actions/setup-node@v3.6.0
+        uses: actions/setup-node@v4
 
       - name: Install eslint
         run: npm ci
@@ -33,12 +37,14 @@ jobs:
       - name: Run linters
         uses: wearerequired/lint-action@v2.3.0
         with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          auto_fix: true
           eslint: true
 
   lint-c:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Install ClangFormat
         run: sudo apt-get install -y clang-format
@@ -46,4 +52,6 @@ jobs:
       - name: Run linters
         uses: wearerequired/lint-action@v2.3.0
         with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          auto_fix: true
           clang_format: true

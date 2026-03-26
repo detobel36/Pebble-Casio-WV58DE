@@ -143,7 +143,8 @@ module.exports = [
         'type': 'input',
         'messageKey': 'cityid',
         'label': 'Location',
-        'description': 'Enter City Name (e.g. London, GB). Use 0 for auto location',
+        'description': 'Enter City Name (e.g. London, GB). ' +
+                       'Use 0 for auto location',
         'defaultValue': '0',
         'group': 'weather',
       },
