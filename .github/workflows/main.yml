@@ -9,7 +9,7 @@ jobs:
       SDK_VER: 4.3
       SDK_BUNDLE_NAME: pebble-sdk-4.5-linux64
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: true
 
@@ -69,7 +69,7 @@ jobs:
         run: ./scripts/gen_screenshots.sh
 
       - name: Upload app
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ env.NAME }}
           path: |
@@ -84,7 +84,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download files
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
 
       - name: Zip each folder
         run: |
@@ -95,7 +95,7 @@ jobs:
             rm -rf "$d"
           done
       - name: Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           files: |
             *
