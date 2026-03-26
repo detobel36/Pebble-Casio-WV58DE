@@ -70,7 +70,7 @@ module.exports = function(minified) {
      * accordingly
      */
     function isApiKeyValid() {
-      const base = 'http://api.openweathermap.org/data/2.5/weather?lat=0&lon=0&appid=';
+      const base = 'https://api.openweathermap.org/data/2.5/weather?lat=0&lon=0&appid=';
       const key = apiKey.get();
       const url = base + key;
 
