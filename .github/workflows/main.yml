@@ -7,7 +7,7 @@ permissions:
 
 jobs:
   build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     timeout-minutes: 20
     outputs:
       artifact_name: ${{ steps.generate_name.outputs.artifact_name }}
@@ -38,19 +38,18 @@ jobs:
           echo "NAME=$NAME" >> $GITHUB_ENV
           echo "artifact_name=$NAME" >> $GITHUB_OUTPUT
 
+      - name: Setup Python 2.7
+        uses: actions/setup-python@v5
+        with:
+          python-version: '2.7'
+
       - name: Install dependencies
         run: |
           sudo apt update
-          sudo apt install python2
-          sudo update-alternatives --install /usr/bin/python python /usr/bin/python2.7 1
-          curl https://bootstrap.pypa.io/pip/2.7/get-pip.py --output get-pip.py
-          sudo python2 get-pip.py
-          sudo -H python2.7 -m pip install -U pip setuptools wheel virtualenv
-          sudo apt install python2-dev
           sudo apt install libnode-dev npm
           sudo apt install -y libsdl1.2debian libfdt1 libpixman-1-0
           sudo apt install -y xvfb
-          rm get-pip.py
+          python2.7 -m pip install -U pip setuptools wheel virtualenv
 
       - name: Bootstrap Pebble SDK
         run: |
