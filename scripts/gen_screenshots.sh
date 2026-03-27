@@ -1,7 +1,7 @@
 #!/bin/bash
 
 realpath() {
-       python -c "import os,sys;print(os.path.realpath(sys.argv[1]))" "$1"
+       python3 -c "import os,sys;print(os.path.realpath(sys.argv[1]))" "$1"
 }
 
 SCRIPT=`which pebble`
@@ -22,14 +22,14 @@ else
 fi
 
 targetPlatforms=$(jq '.pebble.targetPlatforms[]' --raw-output package.json)
-$PYTHON_BIN --version
-$PYTHON_BIN scripts/gen_message.py
+"$PYTHON_BIN" --version
+"$PYTHON_BIN" scripts/gen_message.py
 
 for platform in $targetPlatforms
 do
     screenshotPath="build/$platform.png"
     echo "Generating screenshot for $platform"
-    $PYTHON_BIN scripts/start_emulator.py $platform
+    "$PYTHON_BIN" scripts/start_emulator.py $platform
     QEMU_PORT=$(cat .qemu_port)
     echo "PORT $QEMU_PORT"
     QEMU_PID=$(cat .qemu_pid)
@@ -38,14 +38,14 @@ do
     pebble install --qemu localhost:$QEMU_PORT
     echo "Sending default settings to app on $platform"
     # Sending isn't very consistent, just do it a few times for now
-    $PYTHON_BIN scripts/send_message.py setup_sample.json $QEMU_PORT
-    $PYTHON_BIN scripts/send_message.py setup_sample.json $QEMU_PORT
-    $PYTHON_BIN scripts/send_message.py setup_sample.json $QEMU_PORT
+    "$PYTHON_BIN" scripts/send_message.py setup_sample.json $QEMU_PORT
+    "$PYTHON_BIN" scripts/send_message.py setup_sample.json $QEMU_PORT
+    "$PYTHON_BIN" scripts/send_message.py setup_sample.json $QEMU_PORT
     echo "Sending weather data to app on $platform"
     # Sending isn't very consistent, just do it a few times for now
-    $PYTHON_BIN scripts/send_message.py weather_sample.json $QEMU_PORT
-    $PYTHON_BIN scripts/send_message.py weather_sample.json $QEMU_PORT
-    $PYTHON_BIN scripts/send_message.py weather_sample.json $QEMU_PORT
+    "$PYTHON_BIN" scripts/send_message.py weather_sample.json $QEMU_PORT
+    "$PYTHON_BIN" scripts/send_message.py weather_sample.json $QEMU_PORT
+    "$PYTHON_BIN" scripts/send_message.py weather_sample.json $QEMU_PORT
     echo "Saving screenshot to $screenshotPath"
     pebble screenshot --qemu localhost:$QEMU_PORT $screenshotPath
     echo "Killing emulator for $platform"
