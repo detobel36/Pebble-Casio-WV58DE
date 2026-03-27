@@ -10,25 +10,26 @@ PEBBLE_PATH=`realpath $BIN_PATH/../`
 
 export PEBBLE_TOOLCHAIN_PATH="$PEBBLE_PATH/arm-cs-tools/bin"
 export PATH="$BIN_PATH:$PATH"
-export PYTHONHOME="$PEBBLE_PATH/.env/"
 
-# The pebble script doesn't include this, not sure how it works
-export PYTHONPATH="$PEBBLE_PATH/pebble-tool"
-
-
-export PHONESIM_PATH="$PYTHONHOME/bin/pypkjs"
-
-
+if [ -z "$GITHUB_ACTIONS" ]; then
+    export PYTHONHOME="$PEBBLE_PATH/.env/"
+    # The pebble script doesn't include this, not sure how it works
+    export PYTHONPATH="$PEBBLE_PATH/pebble-tool"
+    export PHONESIM_PATH="$PYTHONHOME/bin/pypkjs"
+    PYTHON_BIN="$PEBBLE_PATH/.env/bin/python"
+else
+    PYTHON_BIN="python3"
+fi
 
 targetPlatforms=$(jq '.pebble.targetPlatforms[]' --raw-output package.json)
-python --version
-python scripts/gen_message.py
+$PYTHON_BIN --version
+$PYTHON_BIN scripts/gen_message.py
 
 for platform in $targetPlatforms
 do
     screenshotPath="build/$platform.png"
     echo "Generating screenshot for $platform"
-    "$PEBBLE_PATH/.env/bin/python" scripts/start_emulator.py $platform
+    $PYTHON_BIN scripts/start_emulator.py $platform
     QEMU_PORT=$(cat .qemu_port)
     echo "PORT $QEMU_PORT"
     QEMU_PID=$(cat .qemu_pid)
@@ -37,14 +38,14 @@ do
     pebble install --qemu localhost:$QEMU_PORT
     echo "Sending default settings to app on $platform"
     # Sending isn't very consistent, just do it a few times for now
-    "$PEBBLE_PATH/.env/bin/python" scripts/send_message.py setup_sample.json $QEMU_PORT
-    "$PEBBLE_PATH/.env/bin/python" scripts/send_message.py setup_sample.json $QEMU_PORT
-    "$PEBBLE_PATH/.env/bin/python" scripts/send_message.py setup_sample.json $QEMU_PORT
+    $PYTHON_BIN scripts/send_message.py setup_sample.json $QEMU_PORT
+    $PYTHON_BIN scripts/send_message.py setup_sample.json $QEMU_PORT
+    $PYTHON_BIN scripts/send_message.py setup_sample.json $QEMU_PORT
     echo "Sending weather data to app on $platform"
     # Sending isn't very consistent, just do it a few times for now
-    "$PEBBLE_PATH/.env/bin/python" scripts/send_message.py weather_sample.json $QEMU_PORT
-    "$PEBBLE_PATH/.env/bin/python" scripts/send_message.py weather_sample.json $QEMU_PORT
-    "$PEBBLE_PATH/.env/bin/python" scripts/send_message.py weather_sample.json $QEMU_PORT
+    $PYTHON_BIN scripts/send_message.py weather_sample.json $QEMU_PORT
+    $PYTHON_BIN scripts/send_message.py weather_sample.json $QEMU_PORT
+    $PYTHON_BIN scripts/send_message.py weather_sample.json $QEMU_PORT
     echo "Saving screenshot to $screenshotPath"
     pebble screenshot --qemu localhost:$QEMU_PORT $screenshotPath
     echo "Killing emulator for $platform"
