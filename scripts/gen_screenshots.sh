@@ -1,7 +1,11 @@
 #!/bin/bash
 
 realpath() {
-       python3 -c "import os,sys;print(os.path.realpath(sys.argv[1]))" "$1"
+    if command -v python3 >/dev/null 2>&1; then
+        python3 -c "import os,sys;print(os.path.realpath(sys.argv[1]))" "$1"
+    else
+        python -c "import os,sys;print(os.path.realpath(sys.argv[1]))" "$1"
+    fi
 }
 
 SCRIPT=`which pebble`
@@ -19,6 +23,9 @@ if [ -z "$GITHUB_ACTIONS" ]; then
     PYTHON_BIN="$PEBBLE_PATH/.env/bin/python"
 else
     PYTHON_BIN="python3"
+    SDK_PATH=$("$PYTHON_BIN" -c "from pebble_tool.sdk import sdk_path; print(sdk_path())")
+    export PATH="$(dirname "$SDK_PATH")/toolchain/bin:$PATH"
+    export PHONESIM_PATH=$(which pypkjs)
 fi
 
 targetPlatforms=$(jq '.pebble.targetPlatforms[]' --raw-output package.json)
