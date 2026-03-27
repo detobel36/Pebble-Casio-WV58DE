@@ -1,4 +1,5 @@
 import bz2
+import sys
 import time
 import subprocess
 import errno
@@ -182,6 +183,7 @@ def main(args):
         f.write(str(port))
     with open(".qemu_pid", "w") as f:
         f.write(str(pid))
+    sys.exit(0)
 
 
 if __name__ == "__main__":
