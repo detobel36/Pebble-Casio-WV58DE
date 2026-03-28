@@ -81,16 +81,14 @@ jobs:
         with:
           name: ${{ needs.build.outputs.artifact_name }}
 
-      - name: Zip each folder
+      - name: Create zip
         run: |
-          for d in */; do
-            echo "Zipping ${d} into ${d%/}.zip"
-            zip -r "${d%/}.zip" "$d"
-            echo "Deleting ${d}"
-            rm -rf "$d"
-          done
+          zip release.zip *.pbw *.png
+
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            *
+            *.pbw
+            *.png
+            release.zip
