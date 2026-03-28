@@ -54,7 +54,7 @@ def _get_spi_path(platform, version):
     return path
 
 def _start_emulator(platform):
-    sdk_version = os.environ.get("SDK_VER", "4.3")
+    sdk_version = os.environ.get("SDK_VER", sdk_manager.get_current_sdk())
     qemu_port = _choose_port()
     qemu_serial_port = _choose_port()
     qemu_gdb_port = _choose_port()
@@ -161,7 +161,7 @@ def post_connect(connection):
         connection.send_packet(
             TimeMessage(
                 message=SetUTC(
-                    unix_time=ts,
+                    unix_time=int(ts),
                     utc_offset=tz_offset_minutes,
                     tz_name=tz_name
                 )
