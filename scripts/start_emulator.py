@@ -161,7 +161,7 @@ def post_connect(connection):
         connection.send_packet(
             TimeMessage(
                 message=SetUTC(
-                    unix_time=ts,
+                    unix_time=int(ts),
                     utc_offset=tz_offset_minutes,
                     tz_name=tz_name
                 )
