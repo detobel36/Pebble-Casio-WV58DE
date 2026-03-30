@@ -193,27 +193,17 @@ function updateWeather() {
 }
 
 /**
- * Fetch weather from OpenWeatherMap and push it to the watch
- * @param {Object} args arguments dict, either containing a location name,
- *                      or lat lon pair
+ * Fetch weather from OpenWeatherMap One Call 3.0 and push it to the watch
+ * @param {string} lat latitude
+ * @param {string} lon longitude
+ * @param {string} name location name
  */
-function fetchWeather(args) {
-  apiKey = JSON.parse(localStorage.getItem('clay-settings')).apiKey;
+function fetchWeatherByCoords(lat, lon, name) {
+  const apiKey = JSON.parse(localStorage.getItem('clay-settings')).apiKey;
   const req = new XMLHttpRequest();
-  let url = 'https://api.openweathermap.org/data/2.5/weather?';
-  if ('location' in args) {
-    console.log('Fetching weather for location ' + args.location);
-    url += 'q='+ encodeURIComponent(args.location);
-  } else if (('lat' in args) && ('lon' in args)) {
-    console.log(
-        'Fetching weather for lat: ' + args.lat + ' lon: ' + args.lon);
-    url += 'lat=' + args.lat + '&lon=' + args.lon;
-  } else {
-    console.log('Invalid fetchWeather args');
-    console.log(JSON.stringify(args, null, 4));
-    return;
-  }
-  url += '&units=metric&lang=' + lang;
+  let url = 'https://api.openweathermap.org/data/3.0/onecall?';
+  url += 'lat=' + lat + '&lon=' + lon;
+  url += '&exclude=minutely,hourly,daily,alerts&units=metric&lang=' + lang;
   url += '&appid=' + apiKey;
   console.log('UpdateURL: ' + url);
   req.open('GET', url, true);
@@ -221,10 +211,9 @@ function fetchWeather(args) {
     if (req.readyState == 4) {
       if (req.status == 200) {
         const response = JSON.parse(req.responseText);
-        const temp = Math.round(response.main.temp);// -273.15
-        const icon = response.weather[0].icon;
-        const cond = response.weather[0].description;
-        const name = response.name;
+        const temp = Math.round(response.current.temp);
+        const icon = response.current.weather[0].icon;
+        const cond = response.current.weather[0].description;
         console.log(
             'Got Weather Data for City: ' + name +
           ', Temp: ' + temp +
@@ -239,4 +228,43 @@ function fetchWeather(args) {
     }
   };
   req.send(null);
+}
+
+/**
+ * Fetch weather from OpenWeatherMap and push it to the watch
+ * @param {Object} args arguments dict, either containing a location name,
+ *                      or lat lon pair
+ */
+function fetchWeather(args) {
+  const apiKey = JSON.parse(localStorage.getItem('clay-settings')).apiKey;
+  if ('location' in args) {
+    console.log('Fetching weather for location ' + args.location);
+    const req = new XMLHttpRequest();
+    const url = 'https://api.openweathermap.org/geo/1.0/direct?q=' +
+      encodeURIComponent(args.location) + '&limit=1&appid=' + apiKey;
+    req.open('GET', url, true);
+    req.onload = function(e) {
+      if (req.readyState == 4) {
+        if (req.status == 200) {
+          const response = JSON.parse(req.responseText);
+          if (response.length > 0) {
+            const lat = response[0].lat.toFixed(3);
+            const lon = response[0].lon.toFixed(3);
+            const name = response[0].name;
+            fetchWeatherByCoords(lat, lon, name);
+          } else {
+            console.log('No geocoding results for ' + args.location);
+          }
+        }
+      }
+    };
+    req.send(null);
+  } else if (('lat' in args) && ('lon' in args)) {
+    console.log(
+        'Fetching weather for lat: ' + args.lat + ' lon: ' + args.lon);
+    fetchWeatherByCoords(args.lat, args.lon, 'Unknown');
+  } else {
+    console.log('Invalid fetchWeather args');
+    console.log(JSON.stringify(args, null, 4));
+  }
 }
